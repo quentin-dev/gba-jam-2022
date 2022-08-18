@@ -33,6 +33,8 @@ bn::point get_next_player_position(bn::point *position,
   return next_position;
 }
 
+// TODO: Implement and use these methods in main.cpp
+
 void finish_bg_movement(bn::point *position,
                         const gj::constants::Directions direction,
                         bn::fixed movement_origin) {}

@@ -1,17 +1,22 @@
 // System includes
 #include "bn_affine_bg_ptr.h"
 #include "bn_assert.h"
+#include "bn_bg_palette_ptr.h"
 #include "bn_bg_palettes.h"
+#include "bn_blending.h"
 #include "bn_core.h"
+#include "bn_fixed_rect.h"
 #include "bn_keypad.h"
 #include "bn_log.h"
 #include "bn_math.h"
 #include "bn_optional.h"
 #include "bn_point.h"
+#include "bn_rect_window.h"
 #include "bn_regular_bg_ptr.h"
 #include "bn_sprite_ptr.h"
 #include "bn_sprite_text_generator.h"
 #include "bn_vector.h"
+#include "bn_window.h"
 
 // Project includes
 #include "gj_bg_islands_collisions.hh"
@@ -22,19 +27,41 @@
 #include "gj_movement.h"
 
 // Build includes
+#include "bn_bg_palette_items_text_bg_palette.h"
 #include "bn_regular_bg_items_overworld_small.h"
+#include "bn_regular_bg_items_text_bg.h"
 #include "bn_sprite_items_player_old.h"
 
 int main() {
   bn::core::init();
 
+  bn::regular_bg_ptr bg_text = bn::regular_bg_items::text_bg.create_bg(0, 0);
+  bg_text.set_visible(true);
+  bg_text.set_priority(0);
+
+  bn::window outside_window = bn::window::outside();
+  outside_window.set_show_all();
+  outside_window.set_show_bg(bg_text, false);
+
+  bn::blending::set_transparency_alpha(0.90);
+  bg_text.set_blending_enabled(true);
+
+  bn::fixed_rect text_rect = bn::fixed_rect(0, 0, 240, 160);
+
+  bn::rect_window text_window = bn::rect_window::internal();
+  text_window.set_visible(false);
+  text_window.set_boundaries(text_rect);
+
   bn::regular_bg_ptr bg_islands =
       bn::regular_bg_items::overworld_small.create_bg(8, -8);
+  bg_islands.set_priority(1);
 
   bn::bg_palettes::set_transparent_color(bn::color(0, 0, 0));
 
   bn::sprite_ptr player_old_sprite =
       bn::sprite_items::player_old.create_sprite(0, 0);
+
+  player_old_sprite.set_bg_priority(1);
 
   // bn::sprite_text_generator text_generator(gj::fixed_32x64_sprite_font);
 
@@ -104,6 +131,11 @@ int main() {
     }
 
     if (!frames_to_wait.has_value()) {
+      if (bn::keypad::a_pressed()) {
+        text_window.set_visible(!text_window.visible());
+        // bg_text.set_visible(!bg_text.visible());
+      }
+
       if (bn::keypad::up_held()) {
 
         next_position = gj::movement::get_next_player_position(
